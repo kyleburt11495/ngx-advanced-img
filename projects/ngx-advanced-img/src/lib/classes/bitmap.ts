@@ -821,6 +821,7 @@ export class NgxAdvancedImgBitmap {
     options?: INgxAdvancedImgOptimizationOptions,
     lastOp?: 'quality' | 'scale' | undefined,
     lastSize?: number,
+    existingCanvas?: HTMLCanvasElement | OffscreenCanvas | null,
   ): Promise<INgxAdvancedImgBitmapOptimization> {
     return new Promise(async (resolve: (value: INgxAdvancedImgBitmapOptimization) => void) => {
       if (
@@ -839,21 +840,33 @@ export class NgxAdvancedImgBitmap {
       let height: number = this.image.height * resizeFactor;
       let minThresholdReached = false;
 
-      // Check for OffscreenCanvas support
-      let canvas: HTMLCanvasElement | OffscreenCanvas | null;
-      let ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null; // Declare ctx outside
+      // Declare the canvas and context, check if existingCanvas is provided
+      let canvas: HTMLCanvasElement | OffscreenCanvas | null = existingCanvas || null;
+      let ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
 
-      if ('OffscreenCanvas' in window) {
-        // Use OffscreenCanvas if supported
-        canvas = new OffscreenCanvas(width, height);
-        ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true });
-        console.log('Using OffscreenCanvas');
+      // If no existingCanvas is provided, create a new one
+      if (!canvas) {
+        if ('OffscreenCanvas' in window) {
+          // Use OffscreenCanvas if supported
+          canvas = new OffscreenCanvas(width, height);
+          ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true });
+          console.log('Using OffscreenCanvas');
+        } else {
+          // Fallback to normal canvas
+          canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true });
+        }
       } else {
-        // Fallback to normal canvas
-        canvas = document.createElement('canvas');
+        // If existingCanvas is provided, adjust its size and get the context
         canvas.width = width;
         canvas.height = height;
-        ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true });
+        if (canvas instanceof OffscreenCanvas) {
+          ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true }) as OffscreenCanvasRenderingContext2D | null;
+        } else {
+          ctx = canvas.getContext('2d', { desynchronized: false, willReadFrequently: true }) as CanvasRenderingContext2D | null;
+        }
       }
 
       // cap the size of the canvas in accordance with te minDimension constraints for optimization
@@ -1080,7 +1093,7 @@ export class NgxAdvancedImgBitmap {
                 }
 
                 // if the quality is too high, reduce it and try again
-                this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
+                this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize, canvas).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
 
                 return;
               }
@@ -1105,7 +1118,7 @@ export class NgxAdvancedImgBitmap {
                 }
               }
 
-              this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
+              this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize, canvas).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
 
               return;
 
@@ -1142,7 +1155,7 @@ export class NgxAdvancedImgBitmap {
                 }
 
                 // if the quality is too high, reduce it and try again
-                this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
+                this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, fileSize, canvas).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
 
                 return;
               }
@@ -1168,7 +1181,7 @@ export class NgxAdvancedImgBitmap {
                 }
               }
 
-              this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
+              this._optimize(type, quality, resizeFactor, maxDimension, options, lastOp, undefined, canvas).then((optimization: INgxAdvancedImgBitmapOptimization) => resolve(optimization));
 
               return;
           }
