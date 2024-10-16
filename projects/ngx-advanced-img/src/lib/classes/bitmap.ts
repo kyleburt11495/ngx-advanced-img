@@ -916,16 +916,19 @@ export class NgxAdvancedImgBitmap {
         isFinite(maxDimension) &&
         maxDimension > 0
       ) {
-        if (canvas.width > maxDimension) {
-          height = canvas.height = canvas.height * resizeFactor;
-          width = canvas.width = maxDimension;
-          resizeFactor = maxDimension / this.image.width;
-        }
 
-        if (canvas.height > maxDimension) {
-          width = canvas.width = canvas.width * resizeFactor;
-          height = canvas.height = maxDimension;
-          resizeFactor = maxDimension / this.image.height;
+        if (canvas.width >= canvas.height) {
+          if (canvas.width > maxDimension) {
+            resizeFactor = maxDimension / this.image.width;
+            height = canvas.height = canvas.height * resizeFactor;
+            width = canvas.width = maxDimension;
+          }
+        } else {
+          if (canvas.height > maxDimension) {
+            resizeFactor = maxDimension / this.image.height;
+            width = canvas.width = canvas.width * resizeFactor;
+            height = canvas.height = maxDimension;
+          }
         }
       }
 
