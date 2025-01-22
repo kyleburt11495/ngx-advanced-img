@@ -1154,7 +1154,7 @@ export class NgxAdvancedImgBitmap {
   
                 if (quality > qualityFloor) {
                   quality = quality - (((options?.sizeLimit ? (fileSize / options?.sizeLimit) * NgxAdvancedImgBitmap.PREDICTION_FACTOR : NgxAdvancedImgBitmap.QUALITY_FACTOR) / (options?.sizeLimit / fileSize) * NgxAdvancedImgBitmap.ITERATION_FACTOR));
-  0
+  
                   if (quality < qualityFloor) {
                     // keep it within a given quality floor
                     quality = qualityFloor;
