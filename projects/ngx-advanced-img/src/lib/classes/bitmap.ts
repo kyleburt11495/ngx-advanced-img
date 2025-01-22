@@ -271,6 +271,26 @@ export class NgxAdvancedImgBitmap {
       } catch (error) {
       }
     }
+
+    if (this.image) {
+      this.image.onload = null;
+      this.image.onerror = null;
+
+      if (this.image.src) {
+        try {
+          domURL?.revokeObjectURL(this.image.src);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+
+    if (this._canvas) {
+      if (this._canvas.parentNode) {
+        this._canvas.parentNode.removeChild(this._canvas); // Remove it from the DOM
+        this._canvas = null;
+      }
+    }
   }
 
   /**
@@ -430,19 +450,27 @@ export class NgxAdvancedImgBitmap {
       size: this.size,
     });
 
+    const domURL: any = URL || webkitURL || window.URL;
+
     this.ttl = 0;
     this.loaded = false;
     this.loadedAt = null;
     if (this.image) {
       this.image.onload = null;
       this.image.onerror = null;
+
+      if (this.image.src) {
+        try {
+          domURL?.revokeObjectURL(this.image.src);
+        } catch (error) {
+          console.error(error);
+        }
+      }
     }
     this.image = undefined;
     this.size = 0;
     this._destroyed?.unsubscribe();
     this._destroyed = undefined;
-
-    const domURL: any = URL || webkitURL || window.URL;
 
     // clear any existing object urls as necessary
     if (this._objectURL) {
@@ -967,6 +995,7 @@ export class NgxAdvancedImgBitmap {
         if (this.canvas) {
           ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
           this.canvas.width = this.canvas.height = 0;
+          ctx?.reset();
         }
   
         if (!blob) {
