@@ -561,7 +561,7 @@ export class NgxAdvancedImgBitmap {
             ctx.drawImage(this.image, 0, 0);
 
             // if we haven't loaded anonymously, we'll taint the canvas and crash the application
-            const dataUri: string = anonymous ? canvas.toDataURL(this._mimeType, fullQualityLoad ? 1 : undefined) : '';
+           // const dataUri: string = anonymous ? canvas.toDataURL(this._mimeType, fullQualityLoad ? 1 : undefined) : '';
 
             if (typeof this._src === 'string') {
               // store the exif data
@@ -571,19 +571,19 @@ export class NgxAdvancedImgBitmap {
             }
 
             // if we got the bitmap data, create the link to download and invoke it
-            if (dataUri) {
-              // clear any existing object urls as necessary
-              if (this._objectURL) {
-                try {
-                  domURL.revokeObjectURL(this._objectURL);
-                } catch (error) {
-                  console.error('An error occurred while cleaning up resources.', error);
-                }
-              }
+            // if (dataUri) {
+            //   // clear any existing object urls as necessary
+            //   if (this._objectURL) {
+            //     try {
+            //       domURL.revokeObjectURL(this._objectURL);
+            //     } catch (error) {
+            //       console.error('An error occurred while cleaning up resources.', error);
+            //     }
+            //   }
 
-              // get the bitmap data in blob format
-              this._objectURL = domURL.createObjectURL(NgxAdvancedImgBitmap.dataURItoBlob(dataUri));
-            }
+            //   // get the bitmap data in blob format
+            //   this._objectURL = domURL.createObjectURL(NgxAdvancedImgBitmap.dataURItoBlob(dataUri));
+            //}
 
             // clean up the canvas
             if (canvas) {
@@ -594,7 +594,7 @@ export class NgxAdvancedImgBitmap {
             this.size = this.image.naturalWidth * this.image.naturalHeight;
 
             const head = `data:${this._mimeType};base64,`;
-            this._fileSize = Math.round(atob(dataUri.substring(head.length)).length);
+            this._fileSize = blobData.size;
 
             // track the time at which this asset was first asked to load
             this.loadedAt = new Date();
@@ -607,6 +607,7 @@ export class NgxAdvancedImgBitmap {
             await this.adjustForExifOrientation();
 
             // if we loaded a non-svg, then we are done loading
+            fileReader = null;
             resolve(this);
           } else {
             const client: XMLHttpRequest = new XMLHttpRequest();
