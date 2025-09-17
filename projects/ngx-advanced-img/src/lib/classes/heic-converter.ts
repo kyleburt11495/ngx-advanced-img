@@ -128,8 +128,6 @@ export class NgxAdvancedImgHeicConverter {
 
     return new Promise((resolve, reject) => {
       // begin parsing of exif data before loss during conversion
-      const exifPromise = exif.parse(src, true);
-
       const fileReader: FileReader = new FileReader();
 
       fileReader.onload = async (event: Event) => {
@@ -141,26 +139,38 @@ export class NgxAdvancedImgHeicConverter {
           const blob = await NgxAdvancedImgHeicConverter.imageDataToBlobOffscreen(imageData, mimeType, 0.92);
 
           let exifData: any = null;
+          let exifrTime: number | null = null;
+          let exifReaderTime: number | null = null;
           
           try {
+            const start = performance.now();
+            const exifPromise = exif.parse(src, true);
             exifData = await exifPromise;
+            exifrTime = performance.now() - start;
           } catch (error) {
             console.warn('Failed to parse EXIF data with exifr, trying ExifReader...', error);
           }
 
-          if (!exifData) {
+          if (true) {
             try {
-              exifData = ExifReader.load(await src.arrayBuffer());
+              const start = performance.now();
+              let exifReaderData = ExifReader.load(await src.arrayBuffer());
+              exifReaderTime = performance.now() - start;
 
               // ExifReader returns tags in a slightly different format, so convert to a more similar structure
-              exifData = Object.keys(exifData).reduce((acc, key) => {
-                acc[key] = exifData[key].description || exifData[key].value || null;
+              exifReaderData = Object.keys(exifReaderData).reduce((acc, key) => {
+                acc[key] = exifReaderData[key].description || exifReaderData[key].value || null;
                 return acc;
               }, {} as any);
             } catch (error) {
               throw new Error('Failed to parse EXIF data with both exifr and ExifReader');
             }
           }
+
+          console.info('EXIF parsing performance:', {
+            exifrTime,
+            exifReaderTime,
+          });
 
           resolve({
             exifData,
